@@ -22,12 +22,7 @@ export default function Dashboard({ selectedWebsite }: DashboardProps) {
   const [isAnalyzingData, setIsAnalyzingData] = useState(false);
   const [aiInsights, setAiInsights] = useState<any[]>([]);
 
-  // Redirect to home if no website is selected
-  useEffect(() => {
-    if (!selectedWebsite) {
-      setLocation("/");
-    }
-  }, [selectedWebsite, setLocation]);
+  // No need to redirect, we'll show a message if no website is selected
 
   // Fetch search analytics data
   const { data: analyticsData, isLoading: isLoadingAnalytics } = useQuery({
@@ -90,6 +85,37 @@ export default function Dashboard({ selectedWebsite }: DashboardProps) {
 
   // Loading state
   const isLoading = isLoadingAnalytics || isLoadingPerformance || isLoadingPages;
+
+  // Show message if no website is selected
+  if (!selectedWebsite) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center min-h-[70vh]">
+          <div className="text-center max-w-lg">
+            <svg 
+              className="h-16 w-16 text-gray-400 mx-auto mb-4" 
+              xmlns="http://www.w3.org/2000/svg" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+            </svg>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Select a website</h2>
+            <p className="text-gray-600 mb-6">
+              Please select a website from the dropdown in the header to view search analytics data.
+            </p>
+            <Button
+              className="bg-primary-600 hover:bg-primary-700 text-white"
+              onClick={() => window.location.href = "/api/search-console/auth-url"}
+            >
+              Connect to Search Console
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Show loading state
   if (isLoading) {

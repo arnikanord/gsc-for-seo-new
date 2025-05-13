@@ -21,9 +21,11 @@ export default function Header({ selectedWebsite, setSelectedWebsite }: HeaderPr
   const [pageTitle, setPageTitle] = useState("Dashboard");
 
   // Get website list
-  const { data: sitesData } = useQuery({
+  const { data: sitesData, isLoading: isLoadingSites } = useQuery({
     queryKey: ["/api/search-console/sites"],
-    enabled: !!selectedWebsite,
+    retry: 1, // Don't retry too many times
+    retryDelay: 1000,
+    staleTime: 60000 // 1 minute
   });
 
   // Set page title based on current location
@@ -43,13 +45,12 @@ export default function Header({ selectedWebsite, setSelectedWebsite }: HeaderPr
 
           {/* Website Selector */}
           <div className="flex items-center">
-            {selectedWebsite && (
-              <WebsiteSelector
-                selectedWebsite={selectedWebsite}
-                websites={sitesData?.sites || []}
-                onSelectWebsite={setSelectedWebsite}
-              />
-            )}
+            <WebsiteSelector
+              selectedWebsite={selectedWebsite}
+              websites={sitesData?.sites || []}
+              onSelectWebsite={setSelectedWebsite}
+              isLoading={isLoadingSites}
+            />
           </div>
 
           <div className="flex items-center">
