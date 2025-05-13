@@ -1,9 +1,30 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger,
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog";
+import { 
+  Select, 
+  SelectContent, 
+  SelectGroup, 
+  SelectItem, 
+  SelectLabel, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { getDateRanges, formatNumber, formatCTR, formatPosition } from "@/lib/utils";
 import LoadingSpinner from "@/components/loading-spinner";
 
@@ -14,7 +35,14 @@ interface AnalyticsProps {
 export default function Analytics({ selectedWebsite }: AnalyticsProps) {
   const [, setLocation] = useLocation();
   const dateRanges = getDateRanges();
-  const { startDate, endDate } = dateRanges.last28Days;
+  
+  // State for date range, filter, and comparison
+  const [selectedDateRange, setSelectedDateRange] = useState<string>("last28Days");
+  const [selectedFilter, setSelectedFilter] = useState<string[]>([]);
+  const [comparisonPeriod, setComparisonPeriod] = useState<string>("previous");
+  
+  // Get date range based on selection
+  const { startDate, endDate } = dateRanges[selectedDateRange as keyof typeof dateRanges] || dateRanges.last28Days;
 
   // No redirect, we'll show a message if no website is selected
 
@@ -132,54 +160,230 @@ export default function Analytics({ selectedWebsite }: AnalyticsProps) {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            {/* Date Range Card */}
             <div className="flex flex-col justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Date Range</h3>
-                <div className="mt-1 text-base font-semibold">Last 28 Days</div>
+                <div className="mt-1 text-base font-semibold">
+                  {selectedDateRange === "last7Days" ? "Last 7 Days" :
+                   selectedDateRange === "last28Days" ? "Last 28 Days" :
+                   selectedDateRange === "last90Days" ? "Last 90 Days" :
+                   selectedDateRange === "last6Months" ? "Last 6 Months" :
+                   selectedDateRange === "lastYear" ? "Last Year" : "Custom Range"}
+                </div>
               </div>
               <div className="mt-4">
-                <Button variant="link" className="px-0 h-auto">
-                  <span className="flex items-center text-primary-600 hover:text-primary-800 text-sm font-medium">
-                    Change
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </span>
-                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="link" className="px-0 h-auto">
+                      <span className="flex items-center text-primary-600 hover:text-primary-800 text-sm font-medium">
+                        Change
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </span>
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Select Date Range</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <RadioGroup 
+                        defaultValue={selectedDateRange}
+                        onValueChange={(value) => setSelectedDateRange(value)}
+                      >
+                        <div className="flex items-center space-x-2 mb-2">
+                          <RadioGroupItem value="last7Days" id="last7Days" />
+                          <Label htmlFor="last7Days">Last 7 Days</Label>
+                        </div>
+                        <div className="flex items-center space-x-2 mb-2">
+                          <RadioGroupItem value="last28Days" id="last28Days" />
+                          <Label htmlFor="last28Days">Last 28 Days</Label>
+                        </div>
+                        <div className="flex items-center space-x-2 mb-2">
+                          <RadioGroupItem value="last90Days" id="last90Days" />
+                          <Label htmlFor="last90Days">Last 90 Days</Label>
+                        </div>
+                        <div className="flex items-center space-x-2 mb-2">
+                          <RadioGroupItem value="last6Months" id="last6Months" />
+                          <Label htmlFor="last6Months">Last 6 Months</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="lastYear" id="lastYear" />
+                          <Label htmlFor="lastYear">Last Year</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                    <DialogFooter>
+                      <DialogClose asChild>
+                        <Button type="button">Apply</Button>
+                      </DialogClose>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
             
+            {/* Filters Card */}
             <div className="flex flex-col justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Filters</h3>
-                <div className="mt-1 text-base font-semibold">None Applied</div>
+                <div className="mt-1 text-base font-semibold">
+                  {selectedFilter.length === 0 ? "None Applied" : `${selectedFilter.length} Applied`}
+                </div>
               </div>
               <div className="mt-4">
-                <Button variant="link" className="px-0 h-auto">
-                  <span className="flex items-center text-primary-600 hover:text-primary-800 text-sm font-medium">
-                    Add Filter
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                    </svg>
-                  </span>
-                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="link" className="px-0 h-auto">
+                      <span className="flex items-center text-primary-600 hover:text-primary-800 text-sm font-medium">
+                        Add Filter
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                        </svg>
+                      </span>
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Apply Filters</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="mb-4">
+                        <Label htmlFor="query-filter" className="mb-2 block">Filter by query</Label>
+                        <Select>
+                          <SelectTrigger id="query-filter">
+                            <SelectValue placeholder="Select query filter" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              <SelectLabel>Contains</SelectLabel>
+                              <SelectItem value="contains">Contains</SelectItem>
+                              <SelectItem value="exact-match">Exact Match</SelectItem>
+                              <SelectItem value="regex">Regex</SelectItem>
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="mb-4">
+                        <Label className="mb-2 block">Device</Label>
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox 
+                              id="device-desktop" 
+                              checked={selectedFilter.includes('desktop')}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedFilter([...selectedFilter, 'desktop']);
+                                } else {
+                                  setSelectedFilter(selectedFilter.filter(f => f !== 'desktop'));
+                                }
+                              }}
+                            />
+                            <Label htmlFor="device-desktop">Desktop</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Checkbox 
+                              id="device-mobile" 
+                              checked={selectedFilter.includes('mobile')}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedFilter([...selectedFilter, 'mobile']);
+                                } else {
+                                  setSelectedFilter(selectedFilter.filter(f => f !== 'mobile'));
+                                }
+                              }}
+                            />
+                            <Label htmlFor="device-mobile">Mobile</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Checkbox 
+                              id="device-tablet" 
+                              checked={selectedFilter.includes('tablet')}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedFilter([...selectedFilter, 'tablet']);
+                                } else {
+                                  setSelectedFilter(selectedFilter.filter(f => f !== 'tablet'));
+                                }
+                              }}
+                            />
+                            <Label htmlFor="device-tablet">Tablet</Label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setSelectedFilter([])}
+                        className="mr-2"
+                      >
+                        Reset
+                      </Button>
+                      <DialogClose asChild>
+                        <Button type="button">Apply Filters</Button>
+                      </DialogClose>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
             
+            {/* Comparison Card */}
             <div className="flex flex-col justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Comparison</h3>
-                <div className="mt-1 text-base font-semibold">vs. Previous Period</div>
+                <div className="mt-1 text-base font-semibold">
+                  {comparisonPeriod === "previous" ? "vs. Previous Period" :
+                   comparisonPeriod === "year" ? "vs. Previous Year" : "None"}
+                </div>
               </div>
               <div className="mt-4">
-                <Button variant="link" className="px-0 h-auto">
-                  <span className="flex items-center text-primary-600 hover:text-primary-800 text-sm font-medium">
-                    Change
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </span>
-                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="link" className="px-0 h-auto">
+                      <span className="flex items-center text-primary-600 hover:text-primary-800 text-sm font-medium">
+                        Change
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </span>
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Comparison Period</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <RadioGroup 
+                        defaultValue={comparisonPeriod}
+                        onValueChange={(value) => setComparisonPeriod(value)}
+                      >
+                        <div className="flex items-center space-x-2 mb-2">
+                          <RadioGroupItem value="previous" id="previous" />
+                          <Label htmlFor="previous">Previous Period</Label>
+                        </div>
+                        <div className="flex items-center space-x-2 mb-2">
+                          <RadioGroupItem value="year" id="year" />
+                          <Label htmlFor="year">Previous Year</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="none" id="none" />
+                          <Label htmlFor="none">No Comparison</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                    <DialogFooter>
+                      <DialogClose asChild>
+                        <Button type="button">Apply</Button>
+                      </DialogClose>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
           </div>
