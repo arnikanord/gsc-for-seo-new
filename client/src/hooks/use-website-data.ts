@@ -80,10 +80,18 @@ export function useWebsiteData(selectedWebsite: string | null, dateRange?: any) 
     isLoading: analytics.isLoading || performance.isLoading || pages.isLoading || devices.isLoading,
     isError: analytics.isError || performance.isError || pages.isError || devices.isError,
     refresh: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/search-console/analytics"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/search-console/performance-by-date"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/search-console/performance-by-page"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/search-console/performance-by-device"] });
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/search-console/analytics", selectedWebsite, startDate, endDate] 
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/search-console/performance-by-date", selectedWebsite, startDate, endDate] 
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/search-console/performance-by-page", selectedWebsite, startDate, endDate] 
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/search-console/performance-by-device", selectedWebsite, startDate, endDate] 
+      });
     },
   };
 }

@@ -29,7 +29,36 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    let url = queryKey[0] as string;
+    const params = new URLSearchParams();
+    
+    // Handle parameters for Search Console API calls
+    if (url.includes('/api/search-console/') && 
+        (url.includes('analytics') || 
+         url.includes('performance') || 
+         url.includes('country') || 
+         url.includes('device'))) {
+      
+      // Add siteUrl param if available (index 1)
+      if (queryKey.length > 1 && queryKey[1]) {
+        params.append('siteUrl', queryKey[1] as string);
+      }
+      
+      // Add startDate param if available (index 2)
+      if (queryKey.length > 2 && queryKey[2]) {
+        params.append('startDate', queryKey[2] as string);
+      }
+      
+      // Add endDate param if available (index 3)
+      if (queryKey.length > 3 && queryKey[3]) {
+        params.append('endDate', queryKey[3] as string);
+      }
+      
+      // Append params to URL
+      url = `${url}?${params.toString()}`;
+    }
+    
+    const res = await fetch(url, {
       credentials: "include",
     });
 
