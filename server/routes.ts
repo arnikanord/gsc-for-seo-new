@@ -68,12 +68,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Google OAuth strategy if credentials are provided
   if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI || "https://86812b5b-84c0-414a-828f-513b67675bb9-00-2f26pgqavj80s.kirk.replit.dev/api/auth/google/callback";
+    console.log("Using Google OAuth redirect URI:", redirectUri);
+    
     passport.use(
       new GoogleStrategy(
         {
           clientID: process.env.GOOGLE_CLIENT_ID,
           clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-          callbackURL: process.env.GOOGLE_REDIRECT_URI || "http://localhost:5000/api/auth/google/callback",
+          callbackURL: redirectUri,
         },
         async (accessToken, refreshToken, profile, done) => {
           try {
