@@ -148,7 +148,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Google OAuth routes
-  app.get("/api/auth/google", passport.authenticate("google", { scope: ["profile", "email", "https://www.googleapis.com/auth/webmasters.readonly"] }));
+  app.get("/api/auth/google", passport.authenticate("google", { 
+    scope: [
+      "profile", 
+      "email", 
+      "https://www.googleapis.com/auth/webmasters.readonly",
+      "https://www.googleapis.com/auth/webmasters"
+    ] 
+  }));
   
   app.get("/api/auth/google/callback", 
     passport.authenticate("google", { failureRedirect: "/" }),
